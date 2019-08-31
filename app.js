@@ -47,8 +47,8 @@ const Webinar = require('./models/webinar');
 
 app.get('/', (req,res) => {
     // render the login form
-    // res.send('login page')
-    res.render('login.ejs')
+
+    // res.render('login.ejs')
 })
 
 app.post('/', (req,res) => {
@@ -76,8 +76,8 @@ app.get('/home', auth, (req,res) => {
 
 app.get('/home/newWebinar', auth, (req,res) => {
     //render the new webinar page
-    // res.send('home/newWebinar-get')
-    res.render('newWebinar.ejs')
+    
+    // res.render('newWebinar.ejs')
 })
 
 app.post('/home/newWebinar', auth, (req,res) => {
