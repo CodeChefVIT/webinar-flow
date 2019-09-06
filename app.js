@@ -3,16 +3,16 @@ const   express     = require('express'),
         bodyParser  = require('body-parser'),
         session     = require('express-session'),
         mongoose    = require('mongoose'),
+        cors        = require('cors'),
         app         = express();
 
-// loading the environment variables
 require('env2')('.env');
 
-// setting body parser
+app.use(cors());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-// setting the home directory
 const publicDir = require('path').join(__dirname,'/public');
 app.use(express.static(publicDir));
 
@@ -34,7 +34,7 @@ let auth = function(req,res,next){
 const password = process.env.password; 
 
 
-// setting up db
+// conneting to mongodb
 mongoose.connect(process.env.mongoURL, {useNewUrlParser: true});
 mongoose.connection
     .once('open', () => console.log('connected to database'))
@@ -42,21 +42,18 @@ mongoose.connection
 
 // ---------------------    MODELS   ---------------------
 
-const Webinar = require('./models/webinar');
-
+const Webinar = require('./models/webinarListModel');
+const EmailId = require('./models/emailIdsListModel');
 
 // ---------------------    ROUTES    ---------------------
 
+// --------- Login ---------
 app.get('/', (req,res) => {
     // render the login form
-
-    res.render('login.ejs')
 })
 
 app.post('/', (req,res) => {
-    console.log(req.session);
     let enteredPassword = req.body.password;
-    console.log(enteredPassword)
     if(password == enteredPassword){
         console.log('logged in');
         req.session.loggedIn = true;
@@ -64,10 +61,12 @@ app.post('/', (req,res) => {
     }
     else{
         console.log('wrong password');
-        res.redirect('/')
+        res.redirect('/');
     }
 })
+// -----------------------
 
+// ------------- list of past and upcoming webinars ------------
 app.get('/home', auth, (req,res) => {
     Webinar.find({})
                     .then((allWebinars) => {
@@ -75,11 +74,11 @@ app.get('/home', auth, (req,res) => {
                     })
                     .catch((err) => console.log('cant get the data. error = ',err));
 })
+// ---------------------------
 
+//  --------- add new webinar ----------
 app.get('/home/newWebinar', auth, (req,res) => {
     //render the new webinar page
-    
-    res.render('newWebinar.ejs')
 })
 
 app.post('/home/newWebinar', auth, (req,res) => {
@@ -93,17 +92,87 @@ app.post('/home/newWebinar', auth, (req,res) => {
     
     new Webinar(newWebinar).save()
                             .then((temp) =>{
-                                console.log(temp)
-                                res.redirect('/home')
+                                console.log(temp);
+                                res.redirect('/home');
                             })
                             .catch((err) => console.log(err))   
 })
+// -------------------------
 
+// --------- edit a exiting webinar ----------
+app.get('/home/:objId/edit', auth, (req,res) => {
+    Webinar.findOne({_id: req.params.objId})
+                .then((webinar) => {
+                    res.json(webinar);
+                })
+                .catch((err) => {
+                    console.log('error=', err, 'while finding ',req.params.objId);
+                    res.redirect('/home');
+                })
+})
+
+app.post('/home/:objId/edit', auth, (req,res) => {
+    let updatedWebinar = {
+        name: req.body.name,
+        eventDate: req.body.eventDate,
+        description: req.body.description,
+        videoLink: req.body.videoLink
+    };
+
+    Webinar.findOneAndUpdate({_id: req.params.objId},{$set: updatedWebinar},{new: true})
+            .then((webinar) => {
+                console.log('updated webinar is : ', webinar);
+                res.redirect('/home');
+            })
+            .catch((err) => {
+                console.log('error while updating db: ',err);
+                res.redirect('/home');
+            })
+})
+// -----------------------
+
+// -------- delete a webinar ---------
+app.get('/home/:objId/delete', auth, (req,res) => {
+    Webinar.findOneAndDelete({_id: req.params.objId})
+            .then((webinar) => {
+                console.log('deleted webinar=', webinar)
+                res.redirect('/home')
+            })
+            .catch((err) => console.log('error while deleting: ', err))
+})
+// -----------------------
+
+// -------- end session: logout -----------
 app.get('/logout', auth, (req,res) => {
     // on clicking the logout button
     req.session.destroy();
     res.redirect('/');
 })
+// ------------------------
+
+
+// --------- registration form ----------
+app.get('/webinarRegistration', (req,res) => {
+    // render the registration form
+})
+
+app.post('/webinarRegistration', (req,res) => {
+    let email = req.body.email;
+    new EmailId({email: email}).save()
+                .then((data) => {
+                    console.log('email added to db : ', data);
+                    res.redirect('/webinarRegistration/success')
+                })
+                .catch((err) =>{
+                    console.log('cant add to db. error = ', err);
+                    res.redirect('/webinarRegistration');
+                })
+})
+
+app.get('/webinarRegistration/success',(req,res) => {
+    res.send('thank you for registering')
+})
+// ----------------------------
 
 
 app.listen(3000,()=>console.log("connected to port 3000"))
