@@ -1,41 +1,48 @@
 var nodemailer = require('nodemailer')
-var webinar=require('./models/emailIdsListModel')
-var send=[];
-
-webinar.find({}).then((emails)=>{
-  send=emails
-})
+var fs=require('fs')
 
 const options={
-  pool:true,
-  host:'smtp.gmail.com',
-  port:587,
-  secure:false,
-  auth:{
-      user:process.env.email,
-      pass:process.env.password
-  }
-};
-
-var transporter=nodemailer.createTransport(options,null)
-  
-var mailOptions = {
-  from: 'senders email',
-  to: send,
-  subject: 'testing',
-  text: 'your message',
-  attachments:[
-    {
-      filename:'filename of attachment',
-      path:'path for attachment'
+        pool:true,
+        host:'smtp.gmail.com',
+        port:587,
+        secure:false,
+        auth:{
+            user:process.env.email,
+            pass:process.env.password
+        }
     }
-  ]
-};
+  
 
-transporter.sendMail(mailOptions, function(error, info){
-  if (error) {
-    console.log(error);
-  } else {
-    console.log('Email sent: ' + info.response);
+const mail=(mailTo,filename,subject)=>new Promise((resolve,reject)=>{
+  var transporter=nodemailer.createTransport(options,null)
+
+  var html=fs.readFileSync(filename)
+
+  var mailOptions = {
+    from:process.env.sender,
+    to: mailTo,
+    subject,
+    html
   }
-});
+
+  transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log(error);
+      reject(error)
+    } else {
+      console.log('Email sent: ' + info.response);
+      resolve(info)
+    }
+  })
+})
+
+const mailMany=(recipients,template,subject)=>{
+  const array=[]
+  for(const i of recipients)
+  {
+    array.push(mail(i,template,subject))
+  }
+  return Promise.all(array)
+}
+
+module.exports=mailMany
