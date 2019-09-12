@@ -183,6 +183,7 @@ app.post('/:objId/webinarRegistration', (req,res) => {
                         })
                 }
                 else{
+                    console.log('duplicate email found')
                     res.json({'save': true});
                 }
             })
