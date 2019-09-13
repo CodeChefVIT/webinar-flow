@@ -25,8 +25,9 @@ mongoose.connection
 
 // ---------------------    MODELS   ---------------------
 
-const Webinar = require('./models/webinarListModel');
-const EmailId = require('./models/emailIdsListModel');
+const Webinar       = require('./models/webinarListModel');
+const EmailId       = require('./models/emailIdsListModel');
+const EmailWebinar  = require('./models/emailsWebinarModel');
 
 // ---------------------    ROUTES    ---------------------
 
@@ -158,8 +159,15 @@ app.post('/:objId/webinarRegistration', (req,res) => {
     let email = req.body.email;
     
     // send mail to this person
+        // to be done by navyaa
     // add to webinar wise emails list
-    
+    new EmailWebinar({
+        'email' : email,
+        'webinarId': req.params.objId
+    })  .save()
+        .then((data) => console.log(data))
+        .catch((err) => console.log(err))
+    // add email to email dump (unique only)
     EmailId.findOne({'email': email})
             .then((check) => {
                 if(!check){
@@ -175,6 +183,7 @@ app.post('/:objId/webinarRegistration', (req,res) => {
                         })
                 }
                 else{
+                    console.log('duplicate email found')
                     res.json({'save': true});
                 }
             })
