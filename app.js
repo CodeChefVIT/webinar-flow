@@ -1,9 +1,11 @@
 // dependencies
 const   express     = require('express'),
         bodyParser  = require('body-parser'),
-        session     = require('express-session'),
         mongoose    = require('mongoose'),
         cors        = require('cors'),
+        jwt         = require('jsonwebtoken'),
+        config      = require('./config'),
+        middleware  = require('./middleware'),
         app         = express();
 
 require('env2')('.env');
@@ -15,6 +17,41 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 const publicDir = require('path').join(__dirname,'/public');
 app.use(express.static(publicDir));
+
+// ------------- setting up jwt ---------------
+
+class HandleGenerator{
+    login(req, res){
+        let password = req.body.password;
+        let adminPassword = process.env.password;
+    
+        if(password){
+            if(password == adminPassword){
+                let token = jwt.sign({username: process.env.admin}, config.secret, {expiresIn: '24h'});
+                console.log('admin login')
+                res.json({
+                    success: true,
+                    message: 'Authentication successful!',
+                    token: token
+                });
+            }
+            else{
+                res.json({
+                    success: false,
+                    message: 'Incorrent username or password'
+                });
+            }
+        }
+        else{
+            res.json({
+                success: false,
+                message: 'Authentication failed! Please check the request'
+            });
+        }
+    }
+}
+
+let handlers = new HandleGenerator();
 
 // conneting to mongodb
 mongoose.connect(process.env.mongoURL, {useNewUrlParser: true});
@@ -33,24 +70,12 @@ const EmailWebinar  = require('./models/emailsWebinarModel');
 
 // --------- Login ---------
 
-const password = process.env.password;
-
-app.post('/', (req,res) => {
-    let enteredPassword = req.body.password;
-    if(password == enteredPassword){
-        console.log('logged in');
-        
-        res.json({'login' : true});
-    }
-    else{
-        console.log('wrong password');
-        res.json({'login' : false});
-    }
-})
+app.post('/', handlers.login)
 // -----------------------
 
+
 // ------------- list of past and upcoming webinars ------------
-app.get('/home', (req,res) => {
+app.get('/home', middleware.checkToken, (req,res) => {
     Webinar.find({})
             .then((allWebinars) => {
                 res.json({'success' : true, 'webinars': allWebinars});
@@ -62,9 +87,10 @@ app.get('/home', (req,res) => {
 })
 // ---------------------------
 
+
 //  --------- add new webinar ----------
 
-app.post('/home/newWebinar', (req,res) => {
+app.post('/home/newWebinar', middleware.checkToken, (req,res) => {
     // add new webinar data to db
     
     let newWebinar = {
@@ -87,8 +113,9 @@ app.post('/home/newWebinar', (req,res) => {
 })
 // -------------------------
 
+
 // --------- edit a exiting webinar ----------
-app.get('/home/:objId/edit', (req,res) => {
+app.get('/home/:objId/edit', middleware.checkToken, (req,res) => {
     Webinar.findOne({_id: req.params.objId})
             .then((webinar) => {
                 res.json({'found': true, 'data': webinar});
@@ -99,7 +126,7 @@ app.get('/home/:objId/edit', (req,res) => {
             })
 })
 
-app.post('/home/:objId/edit', (req,res) => {
+app.post('/home/:objId/edit', middleware.checkToken, (req,res) => {
     let updatedWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
@@ -120,8 +147,9 @@ app.post('/home/:objId/edit', (req,res) => {
 })
 // -----------------------
 
+
 // -------- delete a webinar ---------
-app.get('/home/:objId/delete', (req,res) => {
+app.get('/home/:objId/delete', middleware.checkToken, (req,res) => {
     Webinar.findOneAndDelete({_id: req.params.objId})
             .then((webinar) => {
                 console.log('deleted webinar=', webinar);
@@ -134,8 +162,9 @@ app.get('/home/:objId/delete', (req,res) => {
 })
 // -----------------------
 
+
 // -------- end session: logout -----------
-app.get('/logout', (req,res) => {
+app.get('/logout', middleware.checkToken, (req,res) => {
     // on clicking the logout button
     req.session.destroy();
     res.json({'logout': true})
@@ -167,6 +196,7 @@ app.post('/:objId/webinarRegistration', (req,res) => {
     })  .save()
         .then((data) => console.log(data))
         .catch((err) => console.log(err))
+        
     // add email to email dump (unique only)
     EmailId.findOne({'email': email})
             .then((check) => {
@@ -186,6 +216,9 @@ app.post('/:objId/webinarRegistration', (req,res) => {
                     console.log('duplicate email found')
                     res.json({'save': true});
                 }
+            })
+            .catch((err) => {
+                console.log(err);
             })
 })
 
