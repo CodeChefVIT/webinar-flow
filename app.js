@@ -189,7 +189,6 @@ app.post('/:objId/webinarRegistration', (req,res) => {
     
     // send mail to this person
         // to be done by navyaa
-
     // add to webinar wise emails list
     new EmailWebinar({
         'email' : email,
