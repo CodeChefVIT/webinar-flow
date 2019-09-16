@@ -8,7 +8,9 @@ const   express     = require('express'),
         middleware  = require('./middleware'),
         app         = express();
 
-require('env2')('.env');
+require('dotenv').config();
+
+let port = process.env.PORT || 3000;
 
 app.use(cors());
 
@@ -54,7 +56,10 @@ class HandleGenerator{
 let handlers = new HandleGenerator();
 
 // conneting to mongodb
-mongoose.connect(process.env.mongoURL, {useNewUrlParser: true});
+
+let db = require('./config/keys');
+
+mongoose.connect(db.mongoDB, {useNewUrlParser: true});
 mongoose.set('useFindAndModify', false);
 mongoose.connection
     .once('open', () => console.log('connected to database'))
@@ -223,4 +228,4 @@ app.post('/:objId/webinarRegistration', (req,res) => {
 })
 
 
-app.listen(3000,()=>console.log("connected to port 3000"))
+app.listen(port,()=>console.log("connected to port ",port))
