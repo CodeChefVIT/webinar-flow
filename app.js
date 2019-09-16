@@ -171,7 +171,6 @@ app.get('/home/:objId/delete', middleware.checkToken, (req,res) => {
 // -------- end session: logout -----------
 app.get('/logout', middleware.checkToken, (req,res) => {
     // on clicking the logout button
-    req.session.destroy();
     res.json({'logout': true})
 })
 // ------------------------
