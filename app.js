@@ -101,6 +101,7 @@ app.post('/home/newWebinar', middleware.checkToken, (req,res) => {
     let newWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        tutor: req.body.tutor,
         description: req.body.description,
         regLive : req.body.regLive
     }
@@ -135,6 +136,7 @@ app.post('/home/:objId/edit', middleware.checkToken, (req,res) => {
     let updatedWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        tutor: req.body.tutor,
         description: req.body.description,
         videoLink: req.body.videoLink,
         regLive: req.body.regLive
