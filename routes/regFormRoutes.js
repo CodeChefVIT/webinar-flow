@@ -67,7 +67,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
 })
 
 // verification of email
-router.get('/webinarRegistration/:objId/verifiy', (req,res) => {
+router.get('/webinarRegistration/:objId/verify', (req,res) => {
     let linkobjId = req.params.objId;
 
     // checking in staging collection
