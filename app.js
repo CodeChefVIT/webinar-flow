@@ -67,9 +67,10 @@ mongoose.connection
 
 // ---------------------    MODELS   ---------------------
 
-const Webinar       = require('./models/webinarListModel');
-const EmailId       = require('./models/emailIdsListModel');
-const EmailWebinar  = require('./models/emailsWebinarModel');
+const   Webinar       = require('./models/webinarListModel'),
+        StagedEmail   = require('./models/stagedemailModel'),
+        EmailId       = require('./models/emailIdsListModel'),
+        EmailWebinar  = require('./models/emailsWebinarModel');
 
 // ---------------------    ROUTES    ---------------------
 
@@ -101,6 +102,7 @@ app.post('/home/newWebinar', middleware.checkToken, (req,res) => {
     let newWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        tutor: req.body.tutor,
         description: req.body.description,
         regLive : req.body.regLive
     }
@@ -135,6 +137,7 @@ app.post('/home/:objId/edit', middleware.checkToken, (req,res) => {
     let updatedWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        tutor: req.body.tutor,
         description: req.body.description,
         videoLink: req.body.videoLink,
         regLive: req.body.regLive
@@ -171,7 +174,6 @@ app.get('/home/:objId/delete', middleware.checkToken, (req,res) => {
 // -------- end session: logout -----------
 app.get('/logout', middleware.checkToken, (req,res) => {
     // on clicking the logout button
-    req.session.destroy();
     res.json({'logout': true})
 })
 // ------------------------
@@ -191,40 +193,90 @@ app.get('/:objId/webinarRegistration', (req,res) => {
 
 app.post('/:objId/webinarRegistration', (req,res) => {
     let email = req.body.email;
-    
-    // send mail to this person
-        // to be done by navyaa
-    // add to webinar wise emails list
-    new EmailWebinar({
-        'email' : email,
-        'webinarId': req.params.objId
-    })  .save()
-        .then((data) => console.log(data))
-        .catch((err) => console.log(err))
-        
-    // add email to email dump (unique only)
+
     EmailId.findOne({'email': email})
             .then((check) => {
-                if(!check){
-                    new EmailId({'email': email})
-                        .save()
-                        .then((email) =>{
-                            console.log(email);
-                            res.json({'save': true});
+                if(check){
+                    // email already in dump
+                    // Navyaa -> send mail without email verification link
+                    
+                    // adding email to email-webinar collection as email is already verified
+                    new EmailWebinar({
+                        'email': email,
+                        'webinarId': req.params.objId
+                    }).save()
+                        .then((data)=>{
+                            console.log(data)
+                            res.json({'save': true, 'found': true});
                         })
-                        .catch((err) => {
-                            console.log(error);
-                            res.json({'save': false});
+                        .catch((err)=>{
+                            console.log(err)
+                            res.json({'save': false, 'found': true});
                         })
                 }
                 else{
-                    console.log('duplicate email found')
-                    res.json({'save': true});
+                    // add email to staging collection for verification
+                    new StagedEmail({
+                        'email': email,
+                        'webinarId': req.params.objId
+                    }).save()
+                        .then((data)=>{
+                            let verificationLink = `http://localhost:3000/webinarRegistration/${data['_id']}/verifiy`
+                            // Navyaa -> send mail with email verification link
+
+                            console.log(data);
+                            res.json({'save': true, 'found': false});
+                        })
+                        .catch((err)=>{
+                            console.log(err);
+                            res.json({'save': false, 'found': false});
+                        })
                 }
             })
-            .catch((err) => {
+            .catch((err)=>{
                 console.log(err);
+                res.json({'save': false, 'found': false});
             })
+})
+
+app.get('/webinarRegistration/:objId/verifiy', (req,res) => {
+    let linkobjId = req.params.objId;
+
+    // checking in staging collection
+    StagedEmail.findByIdAndDelete(linkobjId)
+                .then((data) => {
+                    if(data){
+                          // adding to email-webinar collection
+                        new EmailWebinar({
+                            'email' : data['email'],
+                            'webinarId': data['webinarId']
+                        })  .save()
+                            .then((data) => {                                
+                                console.log(data);
+                            })
+                            .catch((err) => console.log(err))
+                    
+                        new EmailId({
+                            'email': data['email']
+                            })  .save()
+                                .then((data) => {
+                                    console.log(data);
+                                })
+                                .catch((err)=>console.log(err))
+                        
+                        res.json({'verified': true});
+
+                    }
+                    else{
+                        res.json({'verified': false});
+                    }
+                    
+                  
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.json({'verified': false});
+                })
 })
 
 
