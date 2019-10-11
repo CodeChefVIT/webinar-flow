@@ -22,9 +22,11 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
     let newWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
         tutor: req.body.tutor,
         description: req.body.description,
-        regLive : req.body.regLive
+        videoLink: req.body.videoLink,
     }
     
     new Webinar(newWebinar)
@@ -57,10 +59,11 @@ router.post('/:objId/edit', middleware.checkToken, (req,res) => {
     let updatedWebinar = {
         name: req.body.name,
         eventDate: req.body.eventDate,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
         tutor: req.body.tutor,
         description: req.body.description,
-        videoLink: req.body.videoLink,
-        regLive: req.body.regLive
+        videoLink: req.body.videoLink
     };
 
     Webinar.findOneAndUpdate({_id: req.params.objId},{$set: updatedWebinar},{new: true})

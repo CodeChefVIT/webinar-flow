@@ -17,6 +17,15 @@ router.get('/:objId/webinarRegistration', (req,res) => {
             })
 })
 
+/*
+personData ={
+    webinarData: data of webinar(obj),
+    email: email of user(string),
+    verified: true if email already in db else false(boolean),
+    verificationLink: attach link to email if email is not verified(string)
+}
+*/
+
 // receiving email from user
 router.post('/:objId/webinarRegistration', (req,res) => {
     let email = req.body.email;
