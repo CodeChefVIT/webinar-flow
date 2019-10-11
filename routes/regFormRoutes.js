@@ -20,13 +20,28 @@ router.get('/:objId/webinarRegistration', (req,res) => {
 // receiving email from user
 router.post('/:objId/webinarRegistration', (req,res) => {
     let email = req.body.email;
+    let personData;
+    Webinar.findOne({_id: req.params.objId})
+            .then((webinar) => {
+                 personData = {
+                     'webinarData':webinar,
+                     'email': email
+                 }
+            })
+            .catch((err) => {
+                console.log('cant get the data for reg. error = ', err);
+                // res.json({'found': false});
+            })    
 
     EmailId.findOne({'email': email})
             .then((check) => {
                 if(check){
                     // email already in dump
-                    // Navyaa -> send mail without email verification link
-                    
+                                       
+                    personData['verified'] = true;
+                    // NAVYAA -> send mail without email verification link. Take personData as argument
+                    mailMany(personData);
+
                     // adding email to email-webinar collection as email is already verified
                     new EmailWebinar({
                         'email': email,
@@ -40,8 +55,8 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                             console.log(err)
                             res.json({'save': false, 'found': true});
                         })
-                }
-                else{
+                }else{
+                    //email is not verfied yet
                     // add email to staging collection for verification
                     new StagedEmail({
                         'email': email,
@@ -49,7 +64,11 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                     }).save()
                         .then((data)=>{
                             let verificationLink = `http://localhost:3000/webinarRegistration/${data['_id']}/verifiy`
-                            // Navyaa -> send mail with email verification link
+
+                            personData['verified'] = false;
+                            personData['verificationLink'] = verificationLink;
+                            // NAVYAA -> send mail with email verification link. Take personData as argument
+                            mailMany(personData);
 
                             console.log(data);
                             res.json({'save': true, 'found': false});
