@@ -15,23 +15,16 @@ router.get('/', middleware.checkToken, (req,res) => {
                 res.json({'success' : false});
             });
 })
-
+// "tutor": "pseudorandom guy",
 
 // add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
-    let newWebinar = {
-        name: req.body.name,
-        eventDate: req.body.eventDate,
-        tutor: req.body.tutor,
-        description: req.body.description,
-        regLive : req.body.regLive
-    }
-    
-    new Webinar(newWebinar)
+      
+    new Webinar(req.body)
             .save()
             .then((webinar) =>{
                 console.log(webinar);
-                res.json({'save' : true});
+                res.json({'save' : true, id: webinar._id});
             })
             .catch((err) => {
                 console.log(err)
@@ -39,8 +32,6 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
             })   
 })
 
-
-// send data of webinar to be edited
 router.get('/:objId/edit', middleware.checkToken, (req,res) => {
     Webinar.findOne({_id: req.params.objId})
             .then((webinar) => {
@@ -54,16 +45,8 @@ router.get('/:objId/edit', middleware.checkToken, (req,res) => {
 
 // received edited data of webinar and making changes to db
 router.post('/:objId/edit', middleware.checkToken, (req,res) => {
-    let updatedWebinar = {
-        name: req.body.name,
-        eventDate: req.body.eventDate,
-        tutor: req.body.tutor,
-        description: req.body.description,
-        videoLink: req.body.videoLink,
-        regLive: req.body.regLive
-    };
-
-    Webinar.findOneAndUpdate({_id: req.params.objId},{$set: updatedWebinar},{new: true})
+  
+    Webinar.findOneAndUpdate({_id: req.params.objId},{$set: req.body},{new: true})
             .then((webinar) => {
                 console.log('updated webinar is : ', webinar);
                 res.json({'edit' : true});
