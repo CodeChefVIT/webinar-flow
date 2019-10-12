@@ -19,17 +19,8 @@ router.get('/', middleware.checkToken, (req,res) => {
 
 // add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
-    let newWebinar = {
-        name: req.body.name,
-        eventDate: req.body.eventDate,
-        startTime: req.body.startTime,
-        endTime: req.body.endTime,
-        tutor: req.body.tutor,
-        description: req.body.description,
-        videoLink: req.body.videoLink,
-    }
-    
-    new Webinar(newWebinar)
+      
+    new Webinar(req.body)
             .save()
             .then((webinar) =>{
                 console.log(webinar);
