@@ -15,7 +15,7 @@ router.get('/', middleware.checkToken, (req,res) => {
                 res.json({'success' : false});
             });
 })
-
+// "tutor": "pseudorandom guy",
 
 // add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
@@ -32,8 +32,6 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
             })   
 })
 
-
-// send data of webinar to be edited
 router.get('/:objId/edit', middleware.checkToken, (req,res) => {
     Webinar.findOne({_id: req.params.objId})
             .then((webinar) => {
