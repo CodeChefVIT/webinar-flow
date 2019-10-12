@@ -39,7 +39,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
             })
             .catch((err) => {
                 console.log('cant get the data for reg. error = ', err);
-                // res.json({'found': false});
+                res.json({'save': false, 'found': false})
             })    
 
     EmailId.findOne({'email': email})
@@ -49,21 +49,34 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                                        
                     personData['verified'] = true;
                     // NAVYAA -> send mail without email verification link. Take personData as argument
-                    mailMany(personData);
+                    // mailMany(personData);
 
                     // adding email to email-webinar collection as email is already verified
-                    new EmailWebinar({
-                        'email': email,
-                        'webinarId': req.params.objId
-                    }).save()
-                        .then((data)=>{
-                            console.log(data)
-                            res.json({'save': true, 'found': true});
-                        })
-                        .catch((err)=>{
-                            console.log(err)
-                            res.json({'save': false, 'found': true});
-                        })
+                    EmailWebinar.findOne({'email': email})
+                                .then((check2)=>{
+                                    if(!check2){                            // saving only unique registrations for a given webinar
+                                        new EmailWebinar({
+                                            'email': email,
+                                            'webinarId': req.params.objId
+                                        }).save()
+                                            .then((data)=>{
+                                                console.log(data)
+                                                res.json({'save': true, 'found': true});
+                                            })
+                                            .catch((err)=>{
+                                                console.log(err)
+                                                res.json({'save': false, 'found': true});
+                                            })
+                                    }
+                                    else{                                  // when user has already registered for the webinar
+                                        res.json({'save': true, 'found': true});
+                                    }
+                                })
+                                .catch((err)=>{
+                                    console.log('error while searching');
+                                    res.json({'save': false, 'found': true})
+                                })
+
                 }else{
                     //email is not verfied yet
                     // add email to staging collection for verification
@@ -77,7 +90,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                             personData['verified'] = false;
                             personData['verificationLink'] = verificationLink;
                             // NAVYAA -> send mail with email verification link. Take personData as argument
-                            mailMany(personData);
+                            // mailMany(personData);
 
                             console.log(data);
                             res.json({'save': true, 'found': false});

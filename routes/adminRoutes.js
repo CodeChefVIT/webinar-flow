@@ -33,7 +33,7 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
             .save()
             .then((webinar) =>{
                 console.log(webinar);
-                res.json({'save' : true});
+                res.json({'save' : true, id: webinar._id});
             })
             .catch((err) => {
                 console.log(err)
@@ -56,17 +56,8 @@ router.get('/:objId/edit', middleware.checkToken, (req,res) => {
 
 // received edited data of webinar and making changes to db
 router.post('/:objId/edit', middleware.checkToken, (req,res) => {
-    let updatedWebinar = {
-        name: req.body.name,
-        eventDate: req.body.eventDate,
-        startTime: req.body.startTime,
-        endTime: req.body.endTime,
-        tutor: req.body.tutor,
-        description: req.body.description,
-        videoLink: req.body.videoLink
-    };
-
-    Webinar.findOneAndUpdate({_id: req.params.objId},{$set: updatedWebinar},{new: true})
+  
+    Webinar.findOneAndUpdate({_id: req.params.objId},{$set: req.body},{new: true})
             .then((webinar) => {
                 console.log('updated webinar is : ', webinar);
                 res.json({'edit' : true});
