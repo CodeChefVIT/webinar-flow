@@ -4,7 +4,8 @@ const   Webinar       = require('../models/webinarListModel'),
         StagedEmail   = require('../models/stagedemailModel'),
         EmailId       = require('../models/emailIdsListModel'),
         EmailWebinar  = require('../models/emailsWebinarModel');
-
+        mailMany = require('../mail')
+        
 // sending webinar data
 router.get('/:objId/webinarRegistration', (req,res) => {
     Webinar.findOne({_id: req.params.objId})
@@ -32,6 +33,12 @@ router.post('/:objId/webinarRegistration', (req,res) => {
     let personData;
     Webinar.findOne({_id: req.params.objId})
             .then((webinar) => {
+
+                 //date and time sent for the calendar event should of the format 
+                // new Date("12 October 2019 17:00")
+                webinar.startTime=new Date(webinar.eventDate+" "+webinar.startTime)
+                webinar.endTime=new Date(webinar.eventDate+" "+webinar.endTime)
+
                  personData = {
                      'webinarData':webinar,
                      'email': email
@@ -49,7 +56,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                                        
                     personData['verified'] = true;
                     // NAVYAA -> send mail without email verification link. Take personData as argument
-                    // mailMany(personData);
+                    mailMany(personData);
 
                     // adding email to email-webinar collection as email is already verified
                     EmailWebinar.findOne({'email': email})
@@ -90,7 +97,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                             personData['verified'] = false;
                             personData['verificationLink'] = verificationLink;
                             // NAVYAA -> send mail with email verification link. Take personData as argument
-                            // mailMany(personData);
+                            mailMany(personData);
 
                             console.log(data);
                             res.json({'save': true, 'found': false});
