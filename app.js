@@ -29,7 +29,7 @@ class HandleGenerator{
     
         if(password){
             if(password == adminPassword){
-                let token = jwt.sign({username: process.env.admin}, config.secret, {expiresIn: '24h'});
+                let token = jwt.sign({username: process.env.admin}, config.secret, {expiresIn: '5h'});
                 console.log('admin login')
                 res.json({
                     success: true,

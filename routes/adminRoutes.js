@@ -15,7 +15,6 @@ router.get('/', middleware.checkToken, (req,res) => {
                 res.json({'success' : false});
             });
 })
-// "tutor": "pseudorandom guy",
 
 // add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
@@ -44,7 +43,7 @@ router.get('/:objId/edit', middleware.checkToken, (req,res) => {
 })
 
 // received edited data of webinar and making changes to db
-router.post('/:objId/edit', middleware.checkToken, (req,res) => {
+router.patch('/:objId/edit', middleware.checkToken, (req,res) => {
   
     Webinar.findOneAndUpdate({_id: req.params.objId},{$set: req.body},{new: true})
             .then((webinar) => {
@@ -59,7 +58,7 @@ router.post('/:objId/edit', middleware.checkToken, (req,res) => {
 
 
 // delete a webinar
-router.get('/:objId/delete', middleware.checkToken, (req,res) => {
+router.delete('/:objId/delete', middleware.checkToken, (req,res) => {
     Webinar.findOneAndDelete({_id: req.params.objId})
             .then((webinar) => {
                 console.log('deleted webinar=', webinar);
