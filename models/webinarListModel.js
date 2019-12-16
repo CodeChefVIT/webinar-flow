@@ -7,7 +7,8 @@ const webinarSchema = new mongoose.Schema({
     endTime: String,
     tutor: String,
     description: String,
-    videoLink: String
+    videoLink: String,
+    typeform: String
 });
 
 const Webinar = mongoose.model('webinarList', webinarSchema);
