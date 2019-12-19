@@ -61,7 +61,7 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
                 console.log(webinar);
 
                 let data = {
-                    "title": `${webinar._id}`,
+                    "title": `Webinar Registration`,
                     "settings":{
                         "is_public": true
                     },
