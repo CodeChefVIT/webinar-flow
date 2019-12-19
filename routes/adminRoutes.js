@@ -18,11 +18,12 @@ router.get('/', middleware.checkToken, (req,res) => {
 })
 
 /*
-
+add new webinar
 route: /home/webinar
 method: post
 
-request: {
+request: 
+{
     name: String,
     eventDate: String,
     startTime: String,
@@ -52,14 +53,11 @@ response:
     }
 
 */
-// add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
       
     new Webinar(req.body)
             .save()
             .then((webinar) =>{
-                console.log(webinar);
-
                 let data = {
                     "title": `Webinar Registration`,
                     "settings":{
@@ -120,6 +118,7 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
             })   
 })
 
+
 router.get('/:objId/edit', middleware.checkToken, (req,res) => {
     Webinar.findOne({_id: req.params.objId})
             .then((webinar) => {
@@ -131,17 +130,94 @@ router.get('/:objId/edit', middleware.checkToken, (req,res) => {
             })
 })
 
-// received edited data of webinar and making changes to db
-router.patch('/:objId/edit', middleware.checkToken, (req,res) => {
+/*
+received edited data of webinar and making changes to db
+route: /home/:objId/edit
+method: put
+
+request: 
+{
+    name: String,
+    eventDate: String,
+    startTime: String,
+    endTime: String,
+    tutor: String,
+    description: String,
+    videoLink: String,
+}
+
+response: 
+    case1: both webinar details in db and typeform updated
+    {
+        edit: true,
+        formUpdate: true
+    }
+
+    case2: webiar updated, typeform failed to update
+    {   
+        edit: true,
+        formUpdate: false
+    }
+
+    case3: both webinar and typeform failed to update
+    {
+        edit: false,
+        formUpdate: false
+    }
+
+*/
+router.put('/:objId/edit', middleware.checkToken, (req,res) => {
   
     Webinar.findOneAndUpdate({_id: req.params.objId},{$set: req.body},{new: true})
             .then((webinar) => {
                 console.log('updated webinar is : ', webinar);
-                res.json({'edit' : true});
+
+                let data = {
+                    "title": `Webinar Registration`,
+                    "settings":{
+                        "is_public": true
+                    },
+                    "welcome_screens":[
+                        {
+                            "title": `${webinar.name}`,
+                            "properties": {
+                              "description": `Register for ${webinar.name} Webinar\nOn: ${webinar.eventDate}`,
+                              "show_button": true,
+                              "button_text": "Register"
+                            }
+                        }
+                    ],
+                    "fields": [
+                      {
+                        "type": "email",
+                        "title": "Email id",
+                        "validations": {
+                            "required": true
+                        }
+                      }
+                    ]
+                };
+                let JSONdata = JSON.stringify(data);
+
+                request({
+                    method: "PUT",
+                    body: JSONdata,
+                    url: `https://api.typeform.com/forms/${webinar.typeformLink.slice(-6)}`,
+                    headers:{
+                        'Authorization': `Bearer ${process.env.typeformToken}`
+                    },
+                    rejectUnauthorized: false
+                }, (err, newRes)=>{
+                    if(err){
+                        res.json({'edit' : true, 'formUpdate': false});
+                    }else{
+                        res.json({'edit' : true, 'formUpdate': true});
+                    }
+                })
             })
             .catch((err) => {
                 console.log('error while updating db: ',err);
-                res.json({'edit' : false});
+                res.json({'edit' : false, 'formUpdate': false});
             })
 })
 
