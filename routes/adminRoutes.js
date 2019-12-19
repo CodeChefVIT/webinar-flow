@@ -227,11 +227,23 @@ router.delete('/:objId/delete', middleware.checkToken, (req,res) => {
     Webinar.findOneAndDelete({_id: req.params.objId})
             .then((webinar) => {
                 console.log('deleted webinar=', webinar);
-                res.json({'delete' : true});
+                request({
+                    method: "DELETE",
+                    url: `https://api.typeform.com/forms/${webinar.typeformLink.slice(-6)}`,
+                    headers:{
+                        'Authorization': `Bearer ${process.env.typeformToken}`
+                    }
+                }, (err, newRes)=>{
+                    if(err){
+                        res.json({'delete' : true, 'formDelete': false});        
+                    }else{
+                        res.json({'delete' : true, 'formDelete': true});        
+                    }
+                })
             })
             .catch((err) => {
                 console.log('error while deleting: ', err);
-                res.json({'delete' : false});
+                res.json({'delete' : false, 'formDelete': false});
             })
 })
 
