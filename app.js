@@ -4,6 +4,7 @@ const   express     = require('express'),
         mongoose    = require('mongoose'),
         cors        = require('cors'),
         jwt         = require('jsonwebtoken'),
+        request     = require('request'),
         config      = require('./config'),
         middleware  = require('./middleware'),
         app         = express();

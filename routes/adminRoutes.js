@@ -1,4 +1,5 @@
 let router      = require('express').Router({mergeParams: true}),
+    request     = require('request'),
     middleware  = require('../middleware')
 
 
@@ -16,6 +17,41 @@ router.get('/', middleware.checkToken, (req,res) => {
             });
 })
 
+/*
+
+route: /home/webinar
+method: post
+
+request: {
+    name: String,
+    eventDate: String,
+    startTime: String,
+    endTime: String,
+    tutor: String,
+    description: String,
+    videoLink: String,
+}
+
+response: 
+    case1: both webinar details typeform url saved to db
+    {
+        save: true
+        id: webinar._id
+        typeformLink: String (url for webinar registration)
+    }
+
+    case2: only webinar details saved to db
+    {   save : true, 
+        id: webinar._id 
+        typeformLink: null
+    }
+
+    case3: webinar details failed to save to db
+    {
+        save: false
+    }
+
+*/
 // add new webinar
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
       
@@ -23,7 +59,60 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
             .save()
             .then((webinar) =>{
                 console.log(webinar);
-                res.json({'save' : true, id: webinar._id});
+
+                let data = {
+                    "title": `${webinar._id}`,
+                    "settings":{
+                        "is_public": true
+                    },
+                    "welcome_screens":[
+                        {
+                            "title": `${webinar.name}`,
+                            "properties": {
+                              "description": `Register for ${webinar.name} Webinar\nOn: ${webinar.eventDate}`,
+                              "show_button": true,
+                              "button_text": "Register"
+                            }
+                        }
+                    ],
+                    "fields": [
+                      {
+                        "type": "email",
+                        "title": "Email id",
+                        "validations": {
+                            "required": true
+                        }
+                      }
+                    ]
+                };
+                let JSONdata = JSON.stringify(data);
+                request({                                                       // creating typeform
+                    method: "POST",
+                    body: JSONdata,
+                    url: `https://api.typeform.com/forms`,
+                    headers:{
+                        'Authorization': `Bearer ${process.env.typeformToken}`
+                    },
+                    rejectUnauthorized: false
+                }, (err, newRes)=>{
+
+                    if(err){                    // if fail to create create typeform
+                        res.json({'save' : true, id: webinar._id, typeformLink: null});
+                    }else{
+                        let output = JSON.parse(newRes.body)
+                        console.log(output._links.display);
+
+                        Webinar.findOneAndUpdate({_id: webinar._id},{typeformLink: output._links.display},{new: true})
+                        .then((webinar) => {
+                            console.log('updated webinar with typeform link : ', webinar);
+                            res.json({'save' : true, id: webinar._id, typeformLink: output._links.display});
+                        })
+                        .catch((err) => {
+                            console.log('error while saving typeform url to db: ',err);
+                            res.json({'save' : true, id: webinar._id, typeformLink: null});
+                        })
+                    }
+                })
             })
             .catch((err) => {
                 console.log(err)
