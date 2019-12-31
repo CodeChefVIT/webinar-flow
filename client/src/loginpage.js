@@ -7,7 +7,7 @@ import './login.css'
 import {TextareaAutosize} from "@material-ui/core";
 
 
-class loginpage extends React.Component {
+class Loginpage extends React.Component {
 
     state={name:'',
     description:'',
@@ -23,7 +23,7 @@ class loginpage extends React.Component {
 
 
     componentDidMount() {
-         axios.get('https://webinar-flow-test.herokuapp.com/5d80ffcd9ad65d00043f71cb/webinarRegistration').then((response) => {
+         axios.get('https://webinar-flow-test.herokuapp.com/5da1d1aae7e1f90004606fda/webinarRegistration').then((response) => {
             console.log(response.data);
             this.setState({name:response.data.data.name,date:response.data.data.eventDate,description:response.data.data.description,
             })}
@@ -41,4 +41,4 @@ class loginpage extends React.Component {
 }
 
 
-export default loginpage;
+export default Loginpage;
