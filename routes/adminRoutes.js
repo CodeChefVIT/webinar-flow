@@ -19,7 +19,7 @@ router.get('/', middleware.checkToken, (req,res) => {
 
 /*
 add new webinar
-route: /home/webinar
+route: /home/newWebinar
 method: post
 
 request: 
@@ -103,7 +103,28 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
                         Webinar.findOneAndUpdate({_id: webinar._id},{typeformLink: output._links.display},{new: true})
                         .then((webinar) => {
                             console.log('updated webinar with typeform link : ', webinar);
-                            res.json({'save' : true, id: webinar._id, typeformLink: output._links.display});
+                            // console.log(req)
+                            let webhookData = JSON.stringify({
+                                "url": `https://webinar-flow-test.herokuapp.com/${webinar._id}/webinarRegistration`,
+                                "enabled": true,
+                            })
+                            request({
+                                method: "PUT",
+                                body: webhookData,
+                                url: `https://api.typeform.com/forms/${webinar.typeformLink.slice(-6)}/webhooks/${webinar._id}`,
+                                headers:{
+                                    'Authorization': `Bearer ${process.env.typeformToken}`
+                                },
+                                rejectUnauthorized: false
+                            }, (err, webhookRes)=>{
+                                if(err){
+                                    res.json({'save' : true, id: webinar._id, typeformLink: webinar.typeformLink, error: "failed to create webhook"});
+                                }else{
+                                    console.log('success!!!!!!!!!!!!!!!!')
+                                    res.json({'save' : true, id: webinar._id, typeformLink: output._links.display});
+                                }
+                            })
+                            // res.json({'save' : true, id: webinar._id, typeformLink: output._links.display});
                         })
                         .catch((err) => {
                             console.log('error while saving typeform url to db: ',err);
@@ -173,7 +194,7 @@ router.put('/:objId/edit', middleware.checkToken, (req,res) => {
                 console.log('updated webinar is : ', webinar);
 
                 let data = {
-                    "title": `Webinar Registration`,
+                    "title": "Webinar Registration",
                     "settings":{
                         "is_public": true
                     },
