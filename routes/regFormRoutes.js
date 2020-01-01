@@ -29,7 +29,7 @@ personData ={
 
 // receiving email from user
 router.post('/:objId/webinarRegistration', (req,res) => {
-    console.log(req.body.answers);
+    console.log(req.body.form_response.answers);
     res.status(200);
     // let email = req.body.email;
     // let personData;
