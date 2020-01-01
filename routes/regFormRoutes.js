@@ -28,8 +28,8 @@ personData ={
 */
 
 // receiving email from user
-router.get('/:objId/webinarRegistration', (req,res) => {
-    console.log(res.body);
+router.post('/:objId/webinarRegistration', (req,res) => {
+    console.log(req.body);
     res.status(200);
     // let email = req.body.email;
     // let personData;
