@@ -138,12 +138,12 @@ router.get('/webinarRegistration/:objId/verify', (req,res) => {
 
                     }
                     else{
-                        res.json({'verified': false});
+                        res.json({'verified': false, 'error': 'not found in staged email'});
                     }
                 })
                 .catch((err) => {
                     console.log(err);
-                    res.json({'verified': false});
+                    res.json({'verified': false, 'error': 'connection to db failed'});
                 })
 })
 
