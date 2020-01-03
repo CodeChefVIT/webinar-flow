@@ -25,7 +25,7 @@ const styles = theme => ({
 
 
 
-class LoginPage extends Component {
+class Text extends Component {
     count=0;
     constructor(props){
         super(props);
@@ -38,7 +38,7 @@ class LoginPage extends Component {
 
     post=()=>{if(this.ValidateEmail(this.state.value)===true){
              axios.post(
-                'https://webinar-flow-test.herokuapp.com/5d80ffcd9ad65d00043f71cb/webinarRegistration?objID=5d80ffcd9ad65d00043f71cb',
+                'https://webinar-flow-test.herokuapp.com/5d80ffcd9ad65d00043f71cb/webinarRegistration?objID=5da1d1aae7e1f90004606fda',
         {
           email:this.state.value
         }
@@ -106,4 +106,4 @@ class LoginPage extends Component {
 
 
 
-export default withStyles(styles, { withTheme: true })(LoginPage)
+export default Text;

@@ -2,25 +2,25 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './bootstrap.min.css'
 import Axios from 'axios';
+import DeleteIcon from '@material-ui/icons/Delete';
+import IconButton from '@material-ui/core/IconButton'
 
-
-function del(props) {
+function Del(props) {
 
     console.log(props)
-    Axios.get(`https://webinar-flow-test.herokuapp.com/home/${props.id}/delete`,{headers: {
-            'Authorization': 'Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNvZGVjaGVmQWRtaW4iLCJpYXQiOjE1NzA5Mzc1NzksImV4cCI6MTU3MTAyMzk3OX0.BAnKILazNQ-TF3q1FiMTSMvkI55oijGdZPSADYKBGSA",
+    Axios.delete('https://webinar-flow-test.herokuapp.com/home/' + props.id + '/delete',{headers: {
+            'Authorization': 'Bearer ' + props.token
         }}).then((res) => console.log(res));
 }
-const Delete = (props) =>{
-    return(  <button onClick={del}
-    type = "button"
-    className = "btn btn-outline-primary" > Primary < /button>)
+export default function Delete(props) {
+    return(  < IconButton onClick={() => Del(props)} ><DeleteIcon/>< /IconButton> );
+
+
 }
 
 
 
 
-export default Delete;
 
 
 

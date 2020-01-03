@@ -9,15 +9,20 @@
 
 
 
-
 }
 body {
-  font-family: "Roboto";
-  font-size: 14px;
-  background: url("Artboard 1.png");
+
+  background-color:#E3E7F1;
+
+
   height: 100%;
   width:100%;
+
   background-size:cover;
+
+
+
+
 
 
 }
