@@ -53,7 +53,7 @@ const mailMany=(send)=>{
   }
 
   var eventObj = {
-    start : send.webinardata.startTime,
+    start : send.webinarData.startTime,
     end : send.webinarData.endTime,
     title : send.webinarData.name,
     description : send.webinarData.description,

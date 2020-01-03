@@ -48,7 +48,7 @@ class HandleGenerator{
         else{
             res.json({
                 success: false,
-                message: 'Authentication failed! Please check the request'
+                message: 'Authentication failed! give a password'
             });
         }
     }

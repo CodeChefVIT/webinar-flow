@@ -6,17 +6,17 @@ const   Webinar       = require('../models/webinarListModel'),
         EmailWebinar  = require('../models/emailsWebinarModel');
         mailMany = require('../mail')
         
-// sending webinar data
-router.get('/:objId/webinarRegistration', (req,res) => {
-    Webinar.findOne({_id: req.params.objId})
-            .then((webinar) => {
-                res.json({'found': true, 'data': webinar});
-            })
-            .catch((err) => {
-                console.log('cant get the data for reg. error = ', err);
-                res.json({'found': false});
-            })
-})
+// // sending webinar data
+// router.get('/:objId/webinarRegistration', (req,res) => {
+//     Webinar.findOne({_id: req.params.objId})
+//             .then((webinar) => {
+//                 res.json({'found': true, 'data': webinar});
+//             })
+//             .catch((err) => {
+//                 console.log('cant get the data for reg. error = ', err);
+//                 res.json({'found': false});
+//             })
+// })
 
 /*
 personData ={
@@ -29,89 +29,83 @@ personData ={
 
 // receiving email from user
 router.post('/:objId/webinarRegistration', (req,res) => {
-    let email = req.body.email;
-    let personData;
+    console.log(req.body.form_response.answers[0].email);
+    
+    let email = req.body.form_response.answers[0].email;
     Webinar.findOne({_id: req.params.objId})
-            .then((webinar) => {
+    .then((webinar) => {
 
-                 //date and time sent for the calendar event should of the format 
-                // new Date("12 October 2019 17:00")
-                webinar.startTime=new Date(webinar.eventDate+" "+webinar.startTime)
-                webinar.endTime=new Date(webinar.eventDate+" "+webinar.endTime)
+        //date and time sent for the calendar event should of the format: new Date("12 October 2019 17:00")
+        webinar.startTime=new Date(webinar.eventDate+" "+webinar.startTime)
+        webinar.endTime=new Date(webinar.eventDate+" "+webinar.endTime)
 
-                 personData = {
-                     'webinarData':webinar,
-                     'email': email
-                 }
-            })
-            .catch((err) => {
-                console.log('cant get the data for reg. error = ', err);
-                res.json({'save': false, 'found': false})
-            })    
+        let personData = {'webinarData':webinar, 'email': email}  // data to be sent in email
 
-    EmailId.findOne({'email': email})
-            .then((check) => {
-                if(check){
-                    // email already in dump
-                                       
-                    personData['verified'] = true;
-                    // NAVYAA -> send mail without email verification link. Take personData as argument
-                    mailMany(personData);
+        EmailId.findOne({'email': email})
+        .then((check) => {
+            if(check){
+                // email already in verified email list
+                                
+                personData['verified'] = true;
+                // NAVYAA -> send mail without email verification link. Take personData as argument
+                mailMany(personData);
 
-                    // adding email to email-webinar collection as email is already verified
-                    EmailWebinar.findOne({'email': email})
-                                .then((check2)=>{
-                                    if(!check2){                            // saving only unique registrations for a given webinar
-                                        new EmailWebinar({
-                                            'email': email,
-                                            'webinarId': req.params.objId
-                                        }).save()
-                                            .then((data)=>{
-                                                console.log(data)
-                                                res.json({'save': true, 'found': true});
-                                            })
-                                            .catch((err)=>{
-                                                console.log(err)
-                                                res.json({'save': false, 'found': true});
-                                            })
-                                    }
-                                    else{                                  // when user has already registered for the webinar
-                                        res.json({'save': true, 'found': true});
-                                    }
-                                })
-                                .catch((err)=>{
-                                    console.log('error while searching');
-                                    res.json({'save': false, 'found': true})
-                                })
+                // adding email to email-webinar collection as email is already verified
+                EmailWebinar.findOne({'email': email})
+                .then((check2)=>{
+                    if(!check2){                            // saving only unique registrations for a given webinar
+                        new EmailWebinar({'email': email, 'webinarId': req.params.objId})
+                            .save()
+                            .then((data)=>{
+                                console.log(data)
+                                res.sendStatus(200);
+                            })
+                            .catch((err)=>{
+                                console.log(err)
+                                res.sendStatus(400);
+                            })
+                    }
+                    else{                                  // when user has already registered for the webinar
+                        res.sendStatus(200);
+                    }
+                })
+                .catch((err)=>{
+                    console.log('error while searching');
+                    res.sendStatus(400)
+                })
+            }else{
+                //email is not verfied yet
+                // add email to staging collection for verification
+                new StagedEmail({
+                    'email': email,
+                    'webinarId': req.params.objId
+                }).save()
+                    .then((data)=>{
+                        let verificationLink = `http://localhost:3000/webinarRegistration/${data['_id']}/verifiy`
 
-                }else{
-                    //email is not verfied yet
-                    // add email to staging collection for verification
-                    new StagedEmail({
-                        'email': email,
-                        'webinarId': req.params.objId
-                    }).save()
-                        .then((data)=>{
-                            let verificationLink = `http://localhost:3000/webinarRegistration/${data['_id']}/verifiy`
+                        personData['verified'] = false;
+                        personData['verificationLink'] = verificationLink;
+                        // NAVYAA -> send mail with email verification link. Take personData as argument
+                        mailMany(personData);
 
-                            personData['verified'] = false;
-                            personData['verificationLink'] = verificationLink;
-                            // NAVYAA -> send mail with email verification link. Take personData as argument
-                            mailMany(personData);
-
-                            console.log(data);
-                            res.json({'save': true, 'found': false});
-                        })
-                        .catch((err)=>{
-                            console.log(err);
-                            res.json({'save': false, 'found': false});
-                        })
-                }
-            })
-            .catch((err)=>{
-                console.log(err);
-                res.json({'save': false, 'found': false});
-            })
+                        console.log(data);
+                        res.sendStatus(200);
+                    })
+                    .catch((err)=>{
+                        console.log(err);
+                        res.sendStatus(400);
+                    })
+            }
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.sendStatus(400);
+        })
+    })
+    .catch((err) => {
+        console.log('cant get the data for reg. error = ', err);
+        res.sendStatus(400);
+    })    
 })
 
 // verification of email
@@ -144,12 +138,12 @@ router.get('/webinarRegistration/:objId/verify', (req,res) => {
 
                     }
                     else{
-                        res.json({'verified': false});
+                        res.json({'verified': false, 'error': 'not found in staged email'});
                     }
                 })
                 .catch((err) => {
                     console.log(err);
-                    res.json({'verified': false});
+                    res.json({'verified': false, 'error': 'connection to db failed'});
                 })
 })
 
