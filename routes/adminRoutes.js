@@ -6,7 +6,7 @@ let router      = require('express').Router({mergeParams: true}),
 const Webinar = require('../models/webinarListModel');
 
 // list of past and upcoming webinars
-router.get('/', middleware.checkToken, (req,res) => {
+router.get('/', (req,res) => {
     Webinar.find().sort({$natural: -1})
             .then((allWebinars) => {
                 res.json({'success' : true, 'webinars': allWebinars});
