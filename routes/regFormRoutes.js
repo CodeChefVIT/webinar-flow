@@ -81,7 +81,7 @@ router.post('/:objId/webinarRegistration', (req,res) => {
                     'webinarId': req.params.objId
                 }).save()
                     .then((data)=>{
-                        let verificationLink = `http://localhost:3000/webinarRegistration/${data['_id']}/verifiy`
+                        let verificationLink = `http://68.183.93.200:3006/webinarRegistration/${data['_id']}/verifiy`
 
                         personData['verified'] = false;
                         personData['verificationLink'] = verificationLink;

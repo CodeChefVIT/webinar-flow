@@ -6,8 +6,8 @@ let router      = require('express').Router({mergeParams: true}),
 const Webinar = require('../models/webinarListModel');
 
 // list of past and upcoming webinars
-router.get('/', middleware.checkToken, (req,res) => {
-    Webinar.find({})
+router.get('/', (req,res) => {
+    Webinar.find().sort({$natural: -1})
             .then((allWebinars) => {
                 res.json({'success' : true, 'webinars': allWebinars});
             })
@@ -51,7 +51,6 @@ response:
     {
         save: false
     }
-
 */
 router.post('/newWebinar', middleware.checkToken, (req,res) => {   
       
@@ -105,7 +104,7 @@ router.post('/newWebinar', middleware.checkToken, (req,res) => {
                             console.log('updated webinar with typeform link : ', webinar);
                             // console.log(req)
                             let webhookData = JSON.stringify({
-                                "url": `https://webinar-flow-test.herokuapp.com/${webinar._id}/webinarRegistration`,
+                                "url": `http://68.183.93.200:3006/${webinar._id}/webinarRegistration`,
                                 "enabled": true,
                             })
                             request({

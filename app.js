@@ -22,7 +22,7 @@ const publicDir = require('path').join(__dirname,'/public');
 app.use(express.static(publicDir));
 
 // ------------- setting up jwt ---------------
-
+// mongodb+srv://pseudorandomGuy:HCQCQLvDxdy7sKZX@cluster0-axghx.mongodb.net/test?retryWrites=true&w=majority
 class HandleGenerator{
     login(req, res){
         let password = req.body.password;
